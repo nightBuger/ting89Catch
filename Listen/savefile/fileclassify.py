@@ -21,14 +21,3 @@ class FileSection:
         low = format_string.format(low)
         hi = format_string.format(hi)
         return {'low': low,'hi':hi,'low-hi':f'{low}-{hi}'}
-
-'''# size = 5
-# s = '{:0>' + str(size) + 'd}'
-# s = s.format(32)
-# print(s)
-
-f = FileSection(1000000)
-
-print(f.get_file_section_by_name('100'))
-
-'''
