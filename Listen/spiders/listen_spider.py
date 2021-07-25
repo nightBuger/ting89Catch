@@ -1,5 +1,6 @@
 import scrapy
 from ..items import ListenItem
+import configparser
 
 class ListenSpider(scrapy.Spider):
     name = "listen"
@@ -7,6 +8,11 @@ class ListenSpider(scrapy.Spider):
         'http://www.ting89.com/books/15767.html'
     ]
     filepath = 'default path'
+
+    def start_requests(self):
+        url = conf.get('Network','urls')
+        print(url)
+        print(1)
 
     def parse(self,response):
         playbook = response.css('div.compress')[0]
