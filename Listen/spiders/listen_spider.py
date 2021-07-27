@@ -5,14 +5,10 @@ import configparser
 class ListenSpider(scrapy.Spider):
     name = "listen"
     start_urls = [
-        'http://www.ting89.com/books/15767.html'
+        # 'http://www.ting89.com/books/15767.html'
+        'http://www.ting89.com/books/1677.html'
     ]
     filepath = 'default path'
-
-    def start_requests(self):
-        url = conf.get('Network','urls')
-        print(url)
-        print(1)
 
     def parse(self,response):
         playbook = response.css('div.compress')[0]
