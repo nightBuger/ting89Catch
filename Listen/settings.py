@@ -62,7 +62,7 @@ DOWNLOADER_MIDDLEWARES = {
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-FILES_STORE = r"..\Listen"
+FILES_STORE = r"./download"
 ITEM_PIPELINES = {
    'Listen.pipelines.ListenPipeline' : 1
    # 'scrapy.pipelines.files.FilesPipeline' : 1
@@ -100,8 +100,9 @@ LOG_ENABLED = True
 # logging使用的编码
 LOG_ENCODING = 'utf-8'
 # 在当前目录里创建logging输出文件的文件名
-LOG_PATH='log'
-os.mkdir(LOG_PATH)
+LOG_PATH='./log'
+if not os.path.exists(LOG_PATH):
+   os.mkdir(LOG_PATH)
 LOG_FILE = LOG_PATH + '/scrapy_{}.log'.format(time.strftime("%Y-%m-%d", time.localtime()) )  
 # log的最低级别
 # CRITICAL - 严重错误
