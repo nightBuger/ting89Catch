@@ -11,14 +11,9 @@ from urllib.parse import urlparse
 
 
 class ListenPipeline(FilesPipeline):
-    # def process_item(self, item, spider):
-    #     return item
-    # def file_path(self, request, response=None, info=None, *, item=None):
-    #     print(response.body)
-    #     return super().file_path(request, response=response, info=info, item=item)
     def file_path(self, request, response=None, info=None, *, item=None):
-        return self.pathname + item['title'] + '.mp3'
-    def open_spider(self, spider):
-        self.pathname = '/本次下载的小说的名字/'
-        return super().open_spider(spider)
-    
+        return '{}/{}/{}'.format(item['web_name'], item['book_name'], item['file_urls'][0].split('/')[-1])  # /ting89/梦里花落知多少/01.mp3'
+    def item_completed(self, results, item, info):
+        for ok, x in results:
+            info.spider.log("下载完成:{}, 文件:{}/{}, 文件url:{}".format(ok, self.store.basedir, x['path'], item['file_urls'][0]))
+        return super().item_completed(results, item, info)

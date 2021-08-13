@@ -1,24 +1,57 @@
 import scrapy
 from ..items import ListenItem
 import configparser
+import re
+import logging
 
 class ListenSpider(scrapy.Spider):
-    name = "listen"
-    start_urls = [
-        # 'http://www.ting89.com/books/15767.html'
-        'http://www.ting89.com/books/1677.html'
-    ]
-    filepath = 'default path'
 
+    # start_urls = ['http://www.ting89.com/books/1677.html']
+
+    # 网站的host。根据 start_urls解析    # www.ting89.com
+    # host_url = re.search('www.*com', start_urls[0])
+    # host_url = host_url.group() if host_url else '' 
+
+    # 爬虫模块的名字。 根据host解析
+    # name = host_url.split('.')[1]   # ting89
+
+    host_url = 'www.ting89.com'
+    name = 'ting89'
+
+    # 书名。在parse里解析
+    book_name = 'book_name'
+
+    def __init__(self, url, *args, **kwargs):
+        super(ListenSpider, self).__init__(*args, **kwargs)
+        data = url.split(',')
+        self.start_urls = [data[0]]
+        self.begin      =  1 if len(data) < 2 else (  1 if data[1]=='' else int(data[1]))
+        self.end        = -1 if len(data) < 3 else ( -1 if data[2]=='' else int(data[2]))
+        self.log('=============本次爬虫设置： url={}, begin={}, end={}'.format( self.start_urls, self.begin, self.end), logging.INFO)
+
+    def log(self, message, level=logging.INFO, **kw):
+        print(message)
+        super().log(message, level, **kw)
+        
     def parse(self,response):
-        playbook = response.css('div.compress')[0]
-        self.filepath = response.css('div.conlist h1::text').get()
-        for src in playbook.css('a::attr(href)').getall():
+        # self.book_name = response.xpath('//div[@class="conlist"]')[0].xpath('//h1/text()').extract()[0]
+        self.book_name = response.css('div.conlist h1::text').get()
+
+        playbook    = response.css('div.compress')[0]
+        book_list    = playbook.css('a::attr(href)').getall()
+        self.begin  = min(self.begin, len(book_list))
+        self.end    = min(self.end, len(book_list))
+        book_list = book_list[self.begin-1 : self.end]
+        self.log('=============爬虫实际抓取 书名:{}, 起始章节:{}, 结束章节:{}, 共:{}'.format( self.book_name, self.begin, self.end, len(book_list)) )
+        for src in book_list:
+            self.log('=============本次爬虫实际抓取地址为 {}'.format( src) )
             yield response.follow(src,callback=self.parseFinalPage,encoding='GBK')
     
     def parseFinalPage(self,response):
         audioLink = response.css('head script::text').re_first('var\s+datas=\(\"\S+?\"').split('"')[1].split('&')[0]
         item = ListenItem()
+        item['web_name'] = self.name
+        item['book_name'] = self.book_name
         item['title'] = response.css('div.play_title::text').get()
         item['file_urls'] = [audioLink]
         yield item

@@ -78,7 +78,7 @@ class ListenDownloaderMiddleware:
         # - or return a Request object
         # - or raise IgnoreRequest: process_exception() methods of
         #   installed downloader middleware will be called
-        request.headers['Referer'] = "http://www.ting89.com/"
+        request.headers['Referer'] = spider.host_url    #"http://www.ting89.com/"
         return None
 
     def process_response(self, request, response, spider):

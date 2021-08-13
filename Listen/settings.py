@@ -62,7 +62,7 @@ DOWNLOADER_MIDDLEWARES = {
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-FILES_STORE = r"E:\Scrapy\Listen\ting89Catch"
+FILES_STORE = r"..\Listen"
 ITEM_PIPELINES = {
    'Listen.pipelines.ListenPipeline' : 1
    # 'scrapy.pipelines.files.FilesPipeline' : 1
@@ -90,3 +90,23 @@ MEDIA_ALLOW_REDIRECTS = True
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+
+import time
+import os
+
+# 启用logging
+LOG_ENABLED = True   
+# logging使用的编码
+LOG_ENCODING = 'utf-8'
+# 在当前目录里创建logging输出文件的文件名
+LOG_PATH='log'
+os.mkdir(LOG_PATH)
+LOG_FILE = LOG_PATH + '/scrapy_{}.log'.format(time.strftime("%Y-%m-%d", time.localtime()) )  
+# log的最低级别
+# CRITICAL - 严重错误
+# ERROR - 一般错误   
+# WARNING - 警告信息
+# INFO - 一般信息
+# DEBUG - 调试信息
+LOG_LEVEL = 'INFO'
