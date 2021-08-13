@@ -43,7 +43,11 @@ class ListenSpider(scrapy.Spider):
         self.end    = min(self.end, len(book_list))
         book_list = book_list[self.begin-1 : self.end]
         self.log('=============爬虫实际抓取 书名:{}, 起始章节:{}, 结束章节:{}, 共:{}'.format( self.book_name, self.begin, self.end, len(book_list)) )
-        for src in book_list:
+
+        # 因为实际下载时，总是逆序下载（除了第一个章节），为了美观，我们先翻转一下下载顺序
+        true_list = list(reversed(book_list[1:]))
+        true_list.insert(0, book_list[0])
+        for src in true_list:
             self.log('=============本次爬虫实际抓取地址为 {}'.format( src) )
             yield response.follow(src,callback=self.parseFinalPage,encoding='GBK')
     
