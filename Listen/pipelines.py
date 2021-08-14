@@ -15,5 +15,8 @@ class ListenPipeline(FilesPipeline):
         return '{}/{}/{}'.format(item['web_name'], item['book_name'], item['file_urls'][0].split('/')[-1])  # /ting89/梦里花落知多少/01.mp3'
     def item_completed(self, results, item, info):
         for ok, x in results:
-            info.spider.log("下载完成:{}, 文件:{}/{}, 文件url:{}".format(ok, self.store.basedir, x['path'], item['file_urls'][0]))
+            if ok:
+                info.spider.log("下载完成: 文件={}/{}, 文件url={}".format(self.store.basedir, x['path'], item['file_urls'][0]))
+            else:
+                info.spider.log("下载失败：文件url={}".format(item['file_urls'][0]))
         return super().item_completed(results, item, info)
