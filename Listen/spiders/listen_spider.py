@@ -3,6 +3,7 @@ from ..items import ListenItem
 import configparser
 import re
 import logging
+import time
 
 class ListenSpider(scrapy.Spider):
 
@@ -15,8 +16,8 @@ class ListenSpider(scrapy.Spider):
     # 爬虫模块的名字。 根据host解析
     # name = host_url.split('.')[1]   # ting89
 
-    host_url = 'www.ting89.com'
-    name = 'ting89'
+    host_url = 'http://www.ting89.com/'
+    name = host_url.split('.')[1]   # ting89
 
     # 书名。在parse里解析
     book_name = 'book_name'
@@ -30,7 +31,7 @@ class ListenSpider(scrapy.Spider):
         self.log('=============本次爬虫设置： url={}, begin={}, end={}'.format( self.start_urls, self.begin, self.end), logging.INFO)
 
     def log(self, message, level=logging.INFO, **kw):
-        print(message)
+        print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(), message)
         super().log(message, level, **kw)
         
     def parse(self,response):
