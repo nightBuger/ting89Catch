@@ -5,6 +5,7 @@ from scrapy.crawler import CrawlerProcess
 from scrapy.settings import Settings
 from scrapy.utils import project
 from Listen.spiders.listen_spider import ListenSpider
+from Dmzj.dmzj_spider import DmzjSpider
 
 
 
@@ -19,7 +20,7 @@ conf.read(os.path.join(os.path.dirname(os.path.realpath(__file__)),'./config.ini
 urls = conf.get('Network', 'urls').split(';')
 for url in urls:
     process = CrawlerProcess(project.get_project_settings())
-    r1 = process.crawl(ListenSpider, url)
+    r1 = process.crawl(DmzjSpider, url)
     r2 = process.start()
 
 
