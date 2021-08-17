@@ -26,8 +26,8 @@ class ListenSpider(scrapy.Spider):
         super(ListenSpider, self).__init__(*args, **kwargs)
         data = url.split(',')
         self.start_urls = [data[0]]
-        self.begin      =  1 if len(data) < 2 else (  1 if data[1]=='' else int(data[1]))
-        self.end        = -1 if len(data) < 3 else ( -1 if data[2]=='' else int(data[2]))
+        self.begin      = 1 if len(data) < 2 else ( 1 if data[1]=='' else int(data[1]))
+        self.end        = 0 if len(data) < 3 else ( 0 if data[2]=='' else int(data[2]))
         self.log('=============本次爬虫设置: url={}, begin={}, end={}'.format( self.start_urls, self.begin, self.end), logging.INFO)
 
     def log(self, message, level=logging.INFO, **kw):
@@ -39,15 +39,15 @@ class ListenSpider(scrapy.Spider):
         self.book_name = response.css('div.conlist h1::text').get()
 
         playbook    = response.css('div.compress')[0]
-        book_list    = playbook.css('a::attr(href)').getall()
+        book_list   = playbook.css('a::attr(href)').getall()
         self.begin  = min(self.begin, len(book_list))
-        self.end    = min(self.end, len(book_list))
-        book_list = book_list[self.begin-1 : self.end]
-        self.log('=============爬虫实际抓取: 书名={}, 起始章节={}, 结束章节={}, 共{}章'.format( self.book_name, self.begin, self.end, len(book_list)) )
+        self.end    = len(book_list) if self.end <= 0 else min(self.end, len(book_list))
+        temp_list   = book_list[self.begin-1 : self.end]
+        self.log('=============爬虫实际抓取: 书名={}, 共{}章; 抓取起始章节={}, 结束章节={}, 抓取{}章'.format( self.book_name, len(book_list), self.begin, self.end, len(temp_list)) )
 
         # 因为实际下载时，总是逆序下载（除了第一个章节），为了美观，我们先翻转一下下载顺序
-        true_list = list(reversed(book_list[1:]))
-        true_list.insert(0, book_list[0])
+        true_list = list(reversed(temp_list[1:]))
+        true_list.insert(0, temp_list[0])
         for src in true_list:
             # self.log('=============本次爬虫实际抓取地址为 {}'.format( src) )
             yield response.follow(src,callback=self.parseFinalPage,encoding='GBK')

@@ -18,5 +18,5 @@ class ListenPipeline(FilesPipeline):
             if ok:
                 info.spider.log("下载完成: 文件={}/{}, 文件url={}".format(self.store.basedir, x['path'], item['file_urls'][0]))
             else:
-                info.spider.log("下载失败：文件url={}".format(item['file_urls'][0]))
+                info.spider.log("下载失败：文件url={}".format(item['file_urls'][0]), level=logging.ERROR)
         return super().item_completed(results, item, info)

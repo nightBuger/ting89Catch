@@ -4,6 +4,8 @@ import configparser
 import re
 import logging
 import time
+import execjs
+import json
 
 class DmzjSpider(scrapy.Spider):
 
@@ -14,7 +16,7 @@ class DmzjSpider(scrapy.Spider):
     # name = host_url.split('.')[1]   # ting89
 
     host_url = 'www.dmzj.com'
-    name = 'Dmzj' #host_url.split('.')[1]   # ting89
+    name = host_url.split('.')[1]   # ting89
 
     # 书名。在parse里解析
     book_name = 'book_name'
@@ -23,8 +25,8 @@ class DmzjSpider(scrapy.Spider):
         super(DmzjSpider, self).__init__(*args, **kwargs)
         data = url.split(',')
         self.start_urls = [data[0]]
-        self.begin      =  1 if len(data) < 2 else (  1 if data[1]=='' else int(data[1]))
-        self.end        = -1 if len(data) < 3 else ( -1 if data[2]=='' else int(data[2]))
+        self.begin      = 1 if len(data) < 2 else ( 1 if data[1]=='' else int(data[1]))
+        self.end        = 0 if len(data) < 3 else ( 0 if data[2]=='' else int(data[2]))
         self.log('=============本次爬虫设置: url={}, begin={}, end={}'.format( self.start_urls, self.begin, self.end), logging.INFO)
 
     def log(self, message, level=logging.INFO, **kw):
@@ -48,20 +50,21 @@ class DmzjSpider(scrapy.Spider):
 
         self.book_name = comic_name
 
-        book_list = response.xpath('//div[@class="tab-content zj_list_con autoHeight"]/ul/li/a/@href').getall()
+        book_list   = response.xpath('//div[@class="tab-content zj_list_con autoHeight"]/ul/li/a/@href').getall()
         self.begin  = min(self.begin, len(book_list))
-        self.end    = min(self.end, len(book_list))
-        book_list = book_list[self.begin-1 : self.end]
-        self.log('=============爬虫实际抓取: 书名={}, 起始章节={}, 结束章节={}, 共{}章'.format( self.book_name, self.begin, self.end, len(book_list)) )
+        self.end    = len(book_list) if self.end <= 0 else min(self.end, len(book_list))
+        temp_list   = book_list[self.begin-1 : self.end]
+        self.log('=============爬虫实际抓取: 书名={},共{}章; 抓取起始章节={}, 结束章节={}, 抓取{}章'.format( self.book_name, len(book_list), self.begin, self.end, len(temp_list)) )
 
         # 因为实际下载时，总是逆序下载（除了第一个章节），为了美观，我们先翻转一下下载顺序
-        true_list = list(reversed(book_list[1:]))
-        true_list.insert(0, book_list[0])
+        true_list = list(reversed(temp_list[1:]))
+        true_list.insert(0, temp_list[0])
         for src in true_list:
             # self.log('=============本次爬虫实际抓取地址为 {}'.format( src) )
             yield response.follow(src,callback=self.parseFinalPage,encoding='GBK')
     
-    def parseFinalPage(self,response):
+    # 肉眼解析img_url模式
+    def parseFinalPage2(self,response):
 
         chapter_name = response.xpath('//div[@class="head_title"]/h2/text()')
         if len(chapter_name) == 0:
@@ -96,26 +99,33 @@ class DmzjSpider(scrapy.Spider):
         item['image_urls'] = url_list
         yield item
 
-    def parseFinalPage1(self,response):
+    # 执行js脚本解析img_url模式
+    def parseFinalPage(self,response):
 
-        chapter_name = response.xpath('//div[@class="head_title"]/h2/text()').extract()[0]
+        chapter_name = response.xpath('//div[@class="head_title"]/h2/text()')
+        if len(chapter_name) == 0:
+            self.log('url={}, 无法找到章节信息！！\n status={}, body={}'.format(response.url, response.status, response.text), level=logging.ERROR)
+            return []
+        else:
+            chapter_name = chapter_name.extract()[0]
 
-        keyword = response.css('head script::text').re("\'\|(.*)\'.split")[0]
-        # keyword is '91047|3059|jpg|chapterpic|nimg|15197804440344|15197804430503|15197804444439||1519780445l/;3847|u6012|15197804467719|15197804426334|15197804418352|hidden|73154|pages|page_url|img|15197804413517|uff09|chapter_name|230|u7b2c163|u8bdd|u9f99||u9ed1|chapter_order|var|uff08|u4e0a|15197804478109|u7130|sum_pages'
-        # pic url is https://images.dmzj.com/img/chapterpic/3059/91047/15197804413517.jpg
-        pic_list = re.findall('(\d{10,})', keyword)
-        pic_list.sort()
-        c4 = re.search('(\|\d{4}\|)', keyword).group()[1:-1]  # 3059
-        c5 = re.search('(\|\d{5}\|)', keyword).group()[1:-1]  # 91047
-        url_list = ['https://images.dmzj.com/img/chapterpic/{}/{}/{}.jpg'.format(c4, c5, x) for x in pic_list]
+        jscode = response.css('head script::text').extract()
+        if len(jscode) == 0:
+            self.log('url={}, 无法找到图片信息！！\n chapter_name={}, head={}'.format(response.url, chapter_name, response.text), level=logging.ERROR)
+            return []
 
-        # key = keyword.split('|')
-        # url_list = ['https://images.dmzj.com/img/{}/{}/{}/{}.{}'.format(key[3], key[1], key[0], x, key[2]) for x in pic_list]
+        a1 = re.search('function.*\)', jscode[0]).group()
+        a2 = execjs.eval(a1[:-1])
+        a3 = re.search('\{.*\}', a2).group()
+        a4 = json.loads(a3)
+        a5 = a4['page_url']
+        pic_list = a5.split('\r\n')
+        url_list = ['https://images.dmzj.com/{}'.format(x) for x in pic_list]
 
-
-        print(chapter_name)
-        print(keyword)
-        print(url_list)
+        self.log('=============章节名称={}, 图片数量={}'.format(chapter_name, len(url_list)) )
+        if len(url_list) == 0:
+            self.log('url={}, 无法找到图片信息！！\n chapter_name={}, head={}'.format(response.url, chapter_name, response.text), level=logging.ERROR)
+            return []
 
         item = DmzjItem()
         item['web_name'] = self.name
@@ -124,3 +134,4 @@ class DmzjSpider(scrapy.Spider):
         item['title'] = chapter_name
         item['image_urls'] = url_list
         yield item
+
