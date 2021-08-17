@@ -8,21 +8,38 @@ from Listen.spiders.listen_spider import ListenSpider
 from Dmzj.dmzj_spider import DmzjSpider
 import re
 
+def GetSpiderName(cfgname):
+    conf = configparser.ConfigParser()
+    conf.read(os.path.join(os.path.dirname(os.path.realpath(__file__)), cfgname))
+    spider_path = conf.items('settings')
+    spider_module = [x[0] for x in spider_path]
+    return spider_module
 
+    # 本想从spider中获取name，结果遍历失败
+    from scrapy.utils.misc import walk_modules
+    from scrapy.utils.spider import iter_spider_classes
+
+    spider_name = []
+    for module in spider_module:
+        for module1 in walk_modules(module):
+            for spcls in iter_spider_classes(module1):
+                spider_name.append(spcls.name)
+    return spider_name
+
+
+spider_factory = GetSpiderName('scrapy.cfg')
 
 ## init
 conf = configparser.ConfigParser()
 conf.read(os.path.join(os.path.dirname(os.path.realpath(__file__)),'./config.ini'))
 
-## execute spider
-spider_factory = ['ting89', 'dmzj']
 
 # 通过url，解析爬虫名字 ( 取 //和/之间的域名，用'.'分割，之后取倒数第二个作为爬虫名字)
 url = conf.get('Network', 'url')
 spider_name = re.search('\/\/.*?\/', url).group().split('.')[-2]
 if spider_name not in spider_factory:
-    print("url not support!!!")
-    exit
+    print("url not support!!!", url)
+    exit(0)
 
 os.environ['SCRAPY_PROJECT'] = spider_name
 
