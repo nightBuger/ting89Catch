@@ -39,7 +39,8 @@ class TingshuSpider(scrapy.Spider):
                    
         self.book_name = html_title.extract()[0]
 
-        book_list   = response.xpath('//ul[@class="compress"]/li')
+        # book_list   = response.xpath('//div[@class="numlist border"]')[0].xpath('ul[@class="compress"]/li')
+        book_list   = response.xpath('//div[@class="numlist border"][last()]//li')
         self.begin  = min(self.begin, len(book_list))
         self.end    = len(book_list) if self.end <= 0 else min(self.end, len(book_list))
         temp_list   = book_list[self.begin-1 : self.end]
@@ -57,9 +58,11 @@ class TingshuSpider(scrapy.Spider):
             yield response.follow(one.xpath('a/@href')[0], callback=self.parseFinalPage,encoding='GBK', cb_kwargs=dict(item=item))
     
     def parseFinalPage(self,response, item):
-        self.host_url = 'http://wting.info'
         script = response.xpath('//div[@class="border"]/script')[0].extract()
         audio_url = re.search('http.*?"\)', script).group()[:-2]
         audio_url = urllib.parse.unquote(audio_url)
         item['file_urls'] = [audio_url]
+
+        # 获取域名作为refer
+        # self.host_url = re.search('(http|https)://(www.)?(\w+(\.)?)+', audio_url).group()
         yield item
