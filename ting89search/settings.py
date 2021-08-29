@@ -1,4 +1,4 @@
-# Scrapy settings for Listen project
+# Scrapy settings for Dmzj project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -6,21 +6,22 @@
 #     https://docs.scrapy.org/en/latest/topics/settings.html
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
+import os
 
-BOT_NAME = 'Listen'
+BOT_NAME = 'ting89search'
 
-SPIDER_MODULES = ['Listen.spiders']
-NEWSPIDER_MODULE = 'Listen.spiders'
+SPIDER_MODULES = ['ting89search']
+NEWSPIDER_MODULE = 'ting89search'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'Listen (+http://www.yourdomain.com)'
+#USER_AGENT = 'Dmzj (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-CONCURRENT_REQUESTS = 3
+CONCURRENT_REQUESTS = 1
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
@@ -45,14 +46,14 @@ CONCURRENT_REQUESTS = 3
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    'Listen.middlewares.ListenSpiderMiddleware': 543,
+#    'Dmzj.middlewares.DmzjSpiderMiddleware': 543,
 #}
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-DOWNLOADER_MIDDLEWARES = {
-   'Listen.middlewares.ListenDownloaderMiddleware': 543,
-}
+# DOWNLOADER_MIDDLEWARES = {
+   # 'Dmzj.middlewares.DmzjDownloaderMiddleware': 543,
+# }
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
@@ -62,10 +63,10 @@ DOWNLOADER_MIDDLEWARES = {
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-FILES_STORE = r"./download"
+FILES_STORE = r"./download/" + BOT_NAME
+if not os.path.exists(FILES_STORE):   os.mkdir(FILES_STORE)
 ITEM_PIPELINES = {
-   'Listen.pipelines.ListenPipeline' : 1
-   # 'scrapy.pipelines.files.FilesPipeline' : 1
+   'ting89search.pipelines.Ting89sPipeline' : 1
 }
 DOWNLOAD_DELAY = 3
 MEDIA_ALLOW_REDIRECTS = True
@@ -93,7 +94,6 @@ MEDIA_ALLOW_REDIRECTS = True
 
 
 import time
-import os
 
 # 启用logging
 LOG_ENABLED = True   
@@ -101,8 +101,7 @@ LOG_ENABLED = True
 LOG_ENCODING = 'utf-8'
 # 在当前目录里创建logging输出文件的文件名
 LOG_PATH='./log'
-if not os.path.exists(LOG_PATH):
-   os.mkdir(LOG_PATH)
+if not os.path.exists(LOG_PATH):   os.mkdir(LOG_PATH)
 LOG_FILE = LOG_PATH + '/scrapy_{}.log'.format(time.strftime("%Y-%m-%d", time.localtime()) )  
 # log的最低级别
 # CRITICAL - 严重错误
@@ -110,4 +109,4 @@ LOG_FILE = LOG_PATH + '/scrapy_{}.log'.format(time.strftime("%Y-%m-%d", time.loc
 # WARNING - 警告信息
 # INFO - 一般信息
 # DEBUG - 调试信息
-LOG_LEVEL = 'INFO'
+LOG_LEVEL = 'DEBUG'
